@@ -1,0 +1,54 @@
+# --- Java & Maven ---
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# --- Compiled class files ---
+*.class
+
+# --- Log files ---
+*.log
+logs/
+
+# --- Blueprints and IDEs ---
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# Eclipse
+.settings/
+.classpath
+.project
+.metadata/
+bin/
+
+# Visual Studio Code
+.vscode/
+
+# --- Operating System Files ---
+.DS_Store
+Thumbs.db
+
+# --- Security & Environment (CRÍTICO) ---
+.env
+.env.local
+.env.*.local
+application-local.properties
+application-local.yml
+auth-key.json
+*.jks
+*.p12
+*.pem
+
+# --- Monitoring & Docker ---
+prometheus/data/
+grafana/data/
