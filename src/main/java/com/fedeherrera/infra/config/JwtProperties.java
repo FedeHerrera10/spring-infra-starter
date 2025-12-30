@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Validated // Esto activa la validación de las propiedades
+@Validated
 @ConfigurationProperties(prefix = "fedeherrera.infra.jwt")
 public class JwtProperties {
     

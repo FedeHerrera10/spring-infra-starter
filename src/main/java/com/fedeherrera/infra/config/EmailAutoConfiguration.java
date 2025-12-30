@@ -18,7 +18,7 @@ public class EmailAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(EmailEventListener.class) // <--- ESTO FALTA
+    @ConditionalOnMissingBean(EmailEventListener.class)
     public EmailEventListener emailEventListener(EmailService emailService) {
         System.out.println("✅ EmailEventListener ha sido cargado por el Starter");
         return new EmailEventListener(emailService);

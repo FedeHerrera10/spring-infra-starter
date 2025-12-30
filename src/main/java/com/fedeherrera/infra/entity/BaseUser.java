@@ -7,7 +7,7 @@ import java.util.Set;
 
 import com.fedeherrera.infra.dto.AuthProviderEnum;
 
-@MappedSuperclass // <--- ESTO reemplaza a @Entity y @Inheritance
+@MappedSuperclass
 @Getter @Setter
 public abstract class BaseUser extends AuditableEntity {
 

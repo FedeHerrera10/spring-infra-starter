@@ -2,7 +2,7 @@ package com.fedeherrera.infra.controller;
 
 import com.fedeherrera.infra.dto.*;
 import com.fedeherrera.infra.entity.BaseUser;
-import com.fedeherrera.infra.entity.BaseVerificationToken; // Importante
+import com.fedeherrera.infra.entity.BaseVerificationToken;
 import com.fedeherrera.infra.exception.RegistrationException;
 import com.fedeherrera.infra.service.auth.AuthService;
 import com.fedeherrera.infra.service.user.UserService;
@@ -20,11 +20,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RequiredArgsConstructor
-// Añadimos V extends BaseVerificationToken
 public abstract class BaseAuthController<T extends BaseUser, V extends BaseVerificationToken> {
 
     protected final AuthService<T ,V> authService;
-    // Ahora VerificationService recibe los dos genéricos
     protected final VerificationService<T, V> verificationService;
     protected final UserService<T> userService;
 
@@ -85,8 +83,7 @@ public abstract class BaseAuthController<T extends BaseUser, V extends BaseVerif
     @Operation(summary = "Restablecer contraseña")
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody @Valid DTOResetPassword resetPassword) {
-        // Asumiendo que userService tiene acceso a la lógica de reseteo
-        userService.resetPassword(resetPassword.getToken(), resetPassword.getNewPassword());
+       userService.resetPassword(resetPassword.getToken(), resetPassword.getNewPassword());
         return ResponseEntity.ok(Map.of("message", "Contraseña actualizada correctamente"));
     }
 
