@@ -1,9 +1,14 @@
 package com.fedeherrera.infra.filter;
 
 import java.time.LocalDateTime;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -11,32 +16,43 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fedeherrera.infra.dto.ErrorResponse;
 import com.fedeherrera.infra.service.RateLimitService;
 
-import io.jsonwebtoken.io.IOException;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.core.Ordered;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@Slf4j // Logger de Lombok
+@Slf4j
 public class RateLimitFilter extends OncePerRequestFilter {
 
     @Autowired
     private RateLimitService rateLimitService;
 
-    @Autowired
-    private ObjectMapper objectMapper; // Para convertir el DTO a JSON
+    private final ObjectMapper objectMapper;
+
+    /**
+     * Constructor con inyección opcional.
+     * Si Spring aún no ha creado el bean de ObjectMapper (debido a la alta prioridad del filtro),
+     * creamos uno manualmente para evitar que la aplicación falle al arrancar.
+     */
+    public RateLimitFilter(@Autowired(required = false) ObjectMapper objectMapper) {
+        if (objectMapper != null) {
+            this.objectMapper = objectMapper;
+            log.info("RateLimitFilter: Usando ObjectMapper inyectado por Spring.");
+        } else {
+            this.objectMapper = new ObjectMapper();
+            // Registramos el módulo para que soporte LocalDateTime si fuera necesario
+            this.objectMapper.registerModule(new JavaTimeModule());
+            log.warn("RateLimitFilter: ObjectMapper no encontrado en el contexto, se creó una instancia manual.");
+        }
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, 
                                     HttpServletResponse response, 
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain) throws ServletException, java.io.IOException {
         
         String path = request.getRequestURI();
         String ip = getClientIp(request);
@@ -47,46 +63,41 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (rateLimitService.resolveBucket(ip, limit).tryConsume(1)) {
             try {
                 filterChain.doFilter(request, response);
-            } catch (java.io.IOException e) {
-               log.error("Error filter rating limit " + e.getMessage());
-            } catch (ServletException e) {
-                log.error("Error filter rating limit " + e.getMessage());
+            } catch (Exception e) {
+                log.error("Error en la cadena de filtros: {}", e.getMessage());
+                throw e;
             }
         } else {
-            // LOG DEL ATAQUE/EXCESO
             log.warn("Rate limit excedido para la IP: {} en el path: {}. Límite: {}", ip, path, limit);
-            
             sendCustomError(request, response);
         }
     }
 
-    private void sendCustomError(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void sendCustomError(HttpServletRequest request, HttpServletResponse response) throws java.io.IOException {
         ErrorResponse errorDetails = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
                 .status(HttpStatus.SC_TOO_MANY_REQUESTS)
                 .error("Too Many Requests")
-                .message("Has superado el límite de peticiones. Intenta de nuevo en 1 minuto.")
+                .message("Has superado el límite de peticiones. Intenta de nuevo en unos momentos.")
                 .path(request.getRequestURI())
                 .build();
 
         response.setStatus(HttpStatus.SC_TOO_MANY_REQUESTS);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         
-        // Escribir el JSON en el body de la respuesta
         try {
             response.getWriter().write(objectMapper.writeValueAsString(errorDetails));
         } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            
-        } catch (java.io.IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Error al convertir ErrorResponse a JSON: {}", e.getMessage());
+            response.getWriter().write("{\"error\": \"Too Many Requests\", \"message\": \"Límite excedido\"}");
         }
     }
 
     private String getClientIp(HttpServletRequest request) {
         String xf = request.getHeader("X-Forwarded-For");
-        return (xf == null) ? request.getRemoteAddr() : xf.split(",")[0];
+        if (xf == null || xf.isEmpty()) {
+            return request.getRemoteAddr();
+        }
+        return xf.split(",")[0];
     }
 }

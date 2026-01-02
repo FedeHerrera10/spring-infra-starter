@@ -139,6 +139,35 @@ public class AppUserService extends UserServiceImpl<User, VerificationToken> {
 
 ```
 
+```java
+@Service
+public class AppVerificationService extends VerificationServiceImpl<User, VerificationToken> {
+
+    // ✅ El constructor debe recibir ÚNICAMENTE el repositorio
+    // No uses @RequiredArgsConstructo
+    public AppVerificationService(TokenRepository tokenRepository) {
+        super(tokenRepository);
+    }
+
+    @Override
+    protected VerificationToken createTokenInstance(User user, String token, LocalDateTime expiresAt, String type) {
+        return VerificationToken.builder()
+                .user(user)
+                .token(token)
+                .expiresAt(expiresAt)
+                .type(BaseVerificationToken.TokenType.valueOf(type)) 
+                .build();
+    }
+
+    @Override
+    protected User getUserFromToken(VerificationToken token) {
+        
+        return token.getUser();
+    }
+}
+
+```
+
 ### 4. Configurar el Controlador
 
 Expón los endpoints de autenticación extendiendo el controlador base:
@@ -149,8 +178,8 @@ Expón los endpoints de autenticación extendiendo el controlador base:
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController extends BaseAuthController<User, VerificationToken> {
-    public AuthController(AuthService<User, VerificationToken> authService) {
-        super(authService);
+    public AuthController(AuthService<User, VerificationToken> authService, VerificationService<User, VerificationToken> verificationService, AppUserService userService) {
+        super(authService, verificationService, userService);
     }
 }
 ```
@@ -166,26 +195,26 @@ YAML
 ```yaml
 spring:
   application:
-    name: ${APP_NAME:spring-secure-api}
+    name: ${APP_NAME}
 
   datasource:
-    url: ${DB_URL:jdbc:mysql://db:3306/secure_api?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:mroot}
+    url: ${DB_URL:jdbc:mysql://db:33066/name_database?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD:admin}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect 
     hibernate:
       ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
 
   mail:
-    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
-    port: ${SPRING_MAIL_PORT:587}
+    host: ${SPRING_MAIL_HOST}
+    port: ${SPRING_MAIL_PORT}
     username: ${SPRING_MAIL_USERNAME}
     password: ${SPRING_MAIL_PASSWORD}
     properties:
@@ -249,7 +278,7 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
   show-actuator: true
-  packages-to-scan: com.example.prueba.demo,com.fedeherrera.infra
+  packages-to-scan: com.example.app,com.fedeherrera.infra
   paths-to-match: /**
 
 logging:
@@ -270,7 +299,7 @@ Para que el sistema de logs (Loki) y las métricas funcionen correctamente, crea
 Fragmento de código
 
 ```
-APP_NAME=spring-secure-api-starter
+APP_NAME=name_app
 DB_URL=jdbc:mysql://localhost:3306/nombre_base_datos?useSSL=false&serverTimezone=UTC
 DB_USERNAME=usuario
 DB_PASSWORD=contraseña
