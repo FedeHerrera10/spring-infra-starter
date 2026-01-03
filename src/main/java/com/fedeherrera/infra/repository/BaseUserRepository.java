@@ -32,4 +32,6 @@ public interface BaseUserRepository<T extends BaseUser> extends JpaRepository<T,
     void lockUser(String username, LocalDateTime lockTime);
 
     List<T> findAllByAccountNonLockedFalseAndLockTimeBefore(LocalDateTime time);
+
+    
 }
