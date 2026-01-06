@@ -2,6 +2,8 @@ package com.fedeherrera.infra.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -31,7 +33,7 @@ public abstract class BaseUser extends AuditableEntity {
     private boolean accountNonLocked = true;
     private int failedAttempts;
     private LocalDateTime lockTime;
-    private LocalDateTime passwordChangedAt;
+    private Instant passwordChangedAt;
 
     @Enumerated(EnumType.STRING)
     private AuthProviderEnum provider = AuthProviderEnum.LOCAL;
@@ -43,4 +45,12 @@ public abstract class BaseUser extends AuditableEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+    
+    public void setPasswordChangedAt(Instant passwordChangedAt) {
+        this.passwordChangedAt = passwordChangedAt;
+    }
+    
+    public void setPasswordChangedAtNow() {
+        this.passwordChangedAt = Instant.now();
+    }
 }

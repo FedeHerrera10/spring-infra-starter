@@ -53,3 +53,4 @@ auth-key.json
 # --- Monitoring & Docker ---
 prometheus/data/
 grafana/data/
+QODO.md

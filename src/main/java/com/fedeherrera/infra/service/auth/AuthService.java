@@ -9,6 +9,7 @@ import com.fedeherrera.infra.service.JwtService;
 import com.fedeherrera.infra.service.role.RoleService;
 import com.fedeherrera.infra.service.user.UserService;
 import com.fedeherrera.infra.service.verfication.VerificationService;
+import com.fedeherrera.infra.service.token.RefreshTokenService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,8 @@ public class AuthService<T extends BaseUser, V extends BaseVerificationToken> { 
     private final PasswordEncoder passwordEncoder;
     private final VerificationService<T, V> verificationService;
     private final JwtService jwtService;
+    
+    private final RefreshTokenService refreshTokenService;
     private final AuthenticationManager authenticationManager;
     private final GoogleTokenVerifierService googleTokenVerifierService;
     private final ApplicationEventPublisher eventPublisher; //
@@ -126,6 +129,8 @@ public class AuthService<T extends BaseUser, V extends BaseVerificationToken> { 
             String accessToken = jwtService.generateToken(principal);
             String refreshToken = jwtService.generateRefreshToken(principal);
 
+             
+            refreshTokenService.createRefreshToken(user.getId(), refreshToken, "unknown", "unknown");
             String roleName = user.getRoles().stream()
                     .findFirst().map(Role::getName).orElse("ROLE_USER");
 
@@ -187,33 +192,48 @@ public class AuthService<T extends BaseUser, V extends BaseVerificationToken> { 
         return userService.save(user);
     }
 
-    public LoginResponse refreshToken(String refreshToken) {
-        // 1. Validar firma y extraer email sin ir a la DB aún
-        if (!jwtService.isTokenSignatureValid(refreshToken)) {
-            throw new AuthException("Refresh token inválido o expirado");
-        }
+   public LoginResponse refreshToken(String oldRefreshTokenValue, String ip, String userAgent) {
+    // 1. Extraer el email del token viejo para buscar al usuario
+    // (Nota: No validamos expiración aquí, el RefreshTokenService lo hará con la DB)
+    String userEmail = jwtService.extractUsername(oldRefreshTokenValue);
 
-        String userEmail = jwtService.extractUsername(refreshToken);
+    // 2. Buscar al usuario real que implementa AuthUser
+    var user = userService.findByUsername(userEmail)
+            .orElseThrow(() -> new AuthException("Usuario no encontrado"));
 
-        // 2. Buscar usuario
-        var user = userService.findByUsername(userEmail)
-                .orElseThrow(() -> new AuthException("Usuario no encontrado"));
+    // 4. Generar nuevo Access Token (JWT de corta duración)
+    UserPrincipal principal = new UserPrincipal(user);
+    String newAccessToken = jwtService.generateToken(principal);
+    String newRefreshToken = jwtService.generateRefreshToken(principal);
 
-        // 3. Validación final (incluyendo el passwordChangedAt que hicimos antes)
-        UserPrincipal principal = new UserPrincipal(user);
-        if (!jwtService.isTokenValid(refreshToken, principal)) {
-            throw new AuthException("Sesión inválida, por favor inicie sesión nuevamente");
-        }
+    // 3. ROTACIÓN: Delegamos la seguridad al servicio de persistencia
+    // Este método: 
+    // - Verifica si el token existe en la DB.
+    // - Verifica si ya fue usado (detección de robo).
+    // - Verifica si el password cambió.
+    // - Revoca el viejo y crea uno nuevo.
+    RefreshToken nextRefreshTokenEntity = refreshTokenService.rotate(
+            oldRefreshTokenValue, 
+            newRefreshToken,
+            (AuthUser) user, 
+            ip, 
+            userAgent
+    );
 
-        // 4. Generar nuevo Access Token
-        String accessToken = jwtService.generateToken(principal);
+    
 
-        return new LoginResponse(
-                user.getUsername(),
-                accessToken,
-                refreshToken, // Reutilizamos el mismo Refresh Token
-                user.getRoles().stream().findFirst().map(Role::getName).orElse("ROLE_USER"));
-    }
+
+    // 5. Retornar la respuesta con el NUEVO refresh token
+    return new LoginResponse(
+            user.getUsername(),
+            newAccessToken,
+            nextRefreshTokenEntity.getToken(), // <--- Token nuevo generado en DB
+            user.getRoles().stream()
+                .findFirst()
+                .map(Role::getName)
+                .orElse("ROLE_USER")
+    );
+}
 
     public void resetPassword(T user) {
         V token = verificationService.createPasswordResetToken(user);

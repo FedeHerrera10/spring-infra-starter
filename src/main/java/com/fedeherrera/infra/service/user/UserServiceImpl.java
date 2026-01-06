@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -64,7 +65,7 @@ public abstract class UserServiceImpl<T extends BaseUser, V extends BaseVerifica
                 .orElseThrow(() -> new RegistrationException("Token inválido o expirado"));
 
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setPasswordChangedAt(LocalDateTime.now());
+        user.setPasswordChangedAt(Instant.now());
         
         userRepository.save(user);
         verificationService.deleteToken(token);

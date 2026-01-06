@@ -8,6 +8,7 @@ import com.fedeherrera.infra.service.auth.AuthService;
 import com.fedeherrera.infra.service.user.UserService;
 import com.fedeherrera.infra.service.verfication.VerificationService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -22,11 +23,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public abstract class BaseAuthController<T extends BaseUser, V extends BaseVerificationToken> {
 
-    protected final AuthService<T ,V> authService;
+    protected final AuthService<T, V> authService;
     protected final VerificationService<T, V> verificationService;
     protected final UserService<T> userService;
-
-
 
     @Operation(summary = "Registro público de usuario")
     @PostMapping(value = "/register", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -70,11 +69,11 @@ public abstract class BaseAuthController<T extends BaseUser, V extends BaseVerif
     public ResponseEntity<?> requestReset(@RequestBody @Valid EmailReset emailReset) {
         T user = userService.findByEmail(emailReset.getEmail())
                 .orElseThrow(() -> new RegistrationException("Email no encontrado"));
-        
+
         if (!user.isEnabled()) {
             throw new RegistrationException("Cuenta no verificada");
         }
-       
+
         authService.resetPassword(user);
 
         return ResponseEntity.ok(Map.of("message", "Si el email existe, recibirás instrucciones"));
@@ -83,13 +82,18 @@ public abstract class BaseAuthController<T extends BaseUser, V extends BaseVerif
     @Operation(summary = "Restablecer contraseña")
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody @Valid DTOResetPassword resetPassword) {
-       userService.resetPassword(resetPassword.getToken(), resetPassword.getNewPassword());
+        userService.resetPassword(resetPassword.getToken(), resetPassword.getNewPassword());
         return ResponseEntity.ok(Map.of("message", "Contraseña actualizada correctamente"));
     }
 
     @Operation(summary = "Refrescar Token JWT")
-    @PostMapping("/refresh-token")
-    public ResponseEntity<LoginResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
-        return ResponseEntity.ok(authService.refreshToken(request.getRefreshToken()));
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(
+            @CookieValue("refreshToken") String refreshToken, // Si usas Cookies
+            HttpServletRequest request) {
+        String ip = request.getRemoteAddr();
+        String ua = request.getHeader("User-Agent");
+
+        return ResponseEntity.ok(authService.refreshToken(refreshToken, ip, ua));
     }
 }
