@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.fedeherrera.infra.dto.ErrorResponse;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
@@ -21,50 +24,96 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        log.error("Error de validación en [{}]: {}", request.getServletPath(), ex.getMessage());
-
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error -> 
             errors.put(error.getField(), error.getDefaultMessage())
         );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-            ErrorResponse.builder()
-                .timestamp(LocalDateTime.now().toString())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Validation Error")
-                .message("Los datos enviados no son válidos")
-                .path(request.getServletPath())
-                .validationErrors(errors)
-                .build()
-        );
+        
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now().toString())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("Validation Error")
+            .message("Los datos enviados no son válidos")
+            .path(request.getServletPath())
+            .validationErrors(errors)
+            .build();
+        
+        log.error("Error de validación en [{}]: {}", request.getServletPath(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler({RegistrationException.class, AuthException.class})
     public ResponseEntity<ErrorResponse> handleBusinessExceptions(RuntimeException ex, HttpServletRequest request) {
-        log.error("Error de negocio en [{}]: {}", request.getServletPath(), ex.getMessage());
+        return buildErrorResponse(
+            ex, 
+            HttpStatus.BAD_REQUEST, 
+            "Business Logic Error", 
+            "Error de negocio", 
+            request
+        );
+    }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-            ErrorResponse.builder()
-                .timestamp(LocalDateTime.now().toString())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Business Logic Error")
-                .message(ex.getMessage())
-                .path(request.getServletPath())
-                .build()
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+            ex, 
+            HttpStatus.INTERNAL_SERVER_ERROR, 
+            "Runtime Error", 
+            "Ocurrió un error en tiempo de ejecución", 
+            request
         );
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex, HttpServletRequest request) {
-        log.error("Error no controlado en [{}]: {}", request.getServletPath(), ex.getMessage(), ex);
+        return buildErrorResponse(
+            ex, 
+            HttpStatus.INTERNAL_SERVER_ERROR, 
+            "Internal Server Error", 
+            "Ocurrió un error inesperado en el servidor", 
+            request
+        );
+    }
+    
+@ExceptionHandler({ExpiredJwtException.class, MalformedJwtException.class, SignatureException.class, JwtAuthenticationException.class})
+public ResponseEntity<ErrorResponse> handleJwtAuthenticationException(Exception ex, HttpServletRequest request) {
+    HttpStatus status = HttpStatus.UNAUTHORIZED;
+    String errorType = "Authentication Error";
+    String defaultMessage = "Error de autenticación";
+    if (ex instanceof ExpiredJwtException) {
+        defaultMessage = "El token JWT ha expirado";
+    } else if (ex instanceof MalformedJwtException || ex instanceof SignatureException) {
+        defaultMessage = "Token JWT inválido o mal formado";
+    }
+    return buildErrorResponse(
+        ex,
+        status,
+        errorType,
+        defaultMessage,
+        request
+    );
+}
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+
+    private ResponseEntity<ErrorResponse> buildErrorResponse(
+        Exception ex, 
+        HttpStatus status, 
+        String errorType, 
+        String defaultMessage, 
+        HttpServletRequest request
+    ) {
+        log.error("{} en [{}]: {}", errorType, request.getServletPath(), ex.getMessage(), ex);
+        
+        String message = ex.getMessage() != null && !ex.getMessage().isBlank() 
+            ? ex.getMessage() 
+            : defaultMessage;
+        
+        return ResponseEntity.status(status).body(
             ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error("Internal Server Error")
-                .message("Ocurrió un error inesperado en el servidor")
+                .status(status.value())
+                .error(errorType)
+                .message(message)
                 .path(request.getServletPath())
                 .build()
         );
