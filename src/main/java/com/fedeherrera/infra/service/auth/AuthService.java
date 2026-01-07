@@ -19,6 +19,7 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Map;
@@ -47,6 +48,7 @@ public class AuthService<T extends BaseUser, V extends BaseVerificationToken> { 
     @Value("${app.security.reset-url:http://localhost:8080/api/v1/auth/reset-password}")
     private String resetUrl;
 
+    @Transactional
     public void registerPublic(PublicRegisterRequest request) {
         validateUniqueFields(request.getUsername(), request.getEmail());
 
@@ -83,6 +85,7 @@ public class AuthService<T extends BaseUser, V extends BaseVerificationToken> { 
 
     }
 
+    @Transactional
     public void registerInternal(AdminCreateUserRequest request) {
 
         if (userService.existsByUsername(request.getUsername())) {
@@ -112,6 +115,7 @@ public class AuthService<T extends BaseUser, V extends BaseVerificationToken> { 
 
     }
 
+    @Transactional
     public LoginResponse login(LoginRequest request) {
         try {
             Authentication auth = authenticationManager.authenticate(
@@ -146,6 +150,7 @@ public class AuthService<T extends BaseUser, V extends BaseVerificationToken> { 
         }
     }
 
+    @Transactional
     public LoginResponse loginWithGoogle(String googleToken) {
         try {
             GoogleIdToken.Payload payload = googleTokenVerifierService.verify(googleToken);
@@ -177,8 +182,8 @@ public class AuthService<T extends BaseUser, V extends BaseVerificationToken> { 
     private T createGoogleUser(String email, String name) {
         String[] names = name.split(" ", 2);
         T user = userService.createNewInstance();
-        user.setEmail(email);
-        user.setUsername(email);
+        user.setEmail(email.toLowerCase());
+        user.setUsername(email.toLowerCase());
         user.setFirstName(names[0]);
         user.setLastName(names.length > 1 ? names[1] : "");
         user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));

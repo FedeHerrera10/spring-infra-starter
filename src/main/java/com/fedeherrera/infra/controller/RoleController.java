@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 
@@ -21,6 +22,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Controlador REST para la gestión de roles en el sistema.
@@ -83,11 +85,15 @@ public class RoleController {
         )
     })
     @GetMapping("/{name}")
-    public Role getRoleByName(
+    public ResponseEntity<?> getRoleByName(
         @Parameter(description = "Nombre del rol a buscar", required = true)
         @PathVariable String name
     ) {
-        return roleService.findByName(name).orElse(null);
+        Optional<Role> role = roleService.findByName(name);
+        if (role.isPresent()) {
+            return ResponseEntity.ok(role.get());
+        }
+        return ResponseEntity.notFound().build();
     }
 
     /**
@@ -192,10 +198,11 @@ public class RoleController {
         )
     })
     @DeleteMapping("/{id}")
-    public void deleteRole(
+    public ResponseEntity<?> deleteRole(
         @Parameter(description = "ID del rol a eliminar", required = true)
         @PathVariable Long id
     ) {
         roleService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

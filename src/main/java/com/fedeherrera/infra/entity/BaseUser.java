@@ -38,7 +38,7 @@ public abstract class BaseUser extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     private AuthProviderEnum provider = AuthProviderEnum.LOCAL;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
