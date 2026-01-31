@@ -1,0 +1,19 @@
+# Configuración de la base de datos en memoria para pruebas
+spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.h2.console.enabled=true
+
+# Configuración de JPA
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# Configuración de logging
+logging.level.org.springframework=INFO
+logging.level.com.fedeherrera=DEBUG
+
+# Configuración de JWT para pruebas
+fedeherrera.infra.jwt.secret-key=test-secret-key-1234567890-1234567890-1234567890
+fedeherrera.infra.jwt.expiration=86400000

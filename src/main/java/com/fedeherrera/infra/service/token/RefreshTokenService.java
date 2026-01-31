@@ -17,14 +17,13 @@ public class RefreshTokenService {
     private final RefreshTokenRepository repo;
     private final long validitySeconds = 2592000; // 30 días
 
-   @Transactional
-public void createRefreshToken(Long userId, String token, String ip, String ua) {
+    @Transactional
+    public void createRefreshToken(Long userId, String token, String ip, String ua) {
 
-    // revocar todos los tokens anteriores para este usuario
-    repo.revokeAllByUserId(userId);
+        // revocar todos los tokens anteriores para este usuario
+        repo.revokeAllByUserId(userId);
 
-    
-    // Crear la entidad del token
+        // Crear la entidad del token
         RefreshToken newToken = new RefreshToken();
         newToken.setToken(token); // Usar el token recibido
         newToken.setUserId(userId);
@@ -37,10 +36,10 @@ public void createRefreshToken(Long userId, String token, String ip, String ua) 
         newToken.setRevoked(false);
         newToken.setReplacedBy(null);
         repo.save(newToken);
-}
+    }
 
     @Transactional(noRollbackFor = RuntimeException.class)
-    public RefreshToken rotate(String oldTokenValue, String newTokenJWT , AuthUser user, String ip, String ua) {
+    public RefreshToken rotate(String oldTokenValue, String newTokenJWT, AuthUser user, String ip, String ua) {
         RefreshToken oldToken = repo.findByToken(oldTokenValue)
                 .orElseThrow(() -> new RuntimeException("Token no encontrado"));
 

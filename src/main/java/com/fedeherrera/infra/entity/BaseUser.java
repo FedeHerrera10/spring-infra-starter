@@ -10,7 +10,8 @@ import java.util.Set;
 import com.fedeherrera.infra.dto.AuthProviderEnum;
 
 @MappedSuperclass
-@Getter @Setter
+@Getter
+@Setter
 public abstract class BaseUser extends AuditableEntity {
 
     @Id
@@ -38,18 +39,14 @@ public abstract class BaseUser extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     private AuthProviderEnum provider = AuthProviderEnum.LOCAL;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles;
-    
+
     public void setPasswordChangedAt(Instant passwordChangedAt) {
         this.passwordChangedAt = passwordChangedAt;
     }
-    
+
     public void setPasswordChangedAtNow() {
         this.passwordChangedAt = Instant.now();
     }
