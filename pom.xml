@@ -7,6 +7,12 @@
     <groupId>com.fedeherrera.infra</groupId>
     <artifactId>api-infra-starter</artifactId>
     <version>1.0.0</version>
+    <distributionManagement>
+    <repository>
+        <id>github</id> <name>GitHub Packages</name>
+        <url>https://maven.pkg.github.com/fedeherrera10/spring-infra-starter</url>
+    </repository>
+</distributionManagement>
     <name>api-infra-starter</name>
 
     <parent>
