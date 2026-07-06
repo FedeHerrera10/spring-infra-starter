@@ -1,12 +1,11 @@
 package com.fedeherrera.infra.service;
 
-import com.fasterxml.jackson.databind.JsonSerializable.Base;
 import com.fedeherrera.infra.entity.BaseUser;
 import com.fedeherrera.infra.entity.BaseVerificationToken;
 import com.fedeherrera.infra.exception.RegistrationException;
 import com.fedeherrera.infra.repository.BaseUserRepository;
 import com.fedeherrera.infra.service.user.UserServiceImpl;
-import com.fedeherrera.infra.service.verfication.VerificationService;
+import com.fedeherrera.infra.service.verification.VerificationService;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -284,10 +283,6 @@ class UserServiceImplTest {
 }
 
 class TestUser extends BaseUser {
-    // Add any specific fields or methods for testing if needed
-}
-
-class TestToken extends BaseVerificationToken {
     // Add any specific fields or methods for testing if needed
 }
 

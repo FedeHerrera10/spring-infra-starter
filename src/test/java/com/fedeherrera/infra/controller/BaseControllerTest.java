@@ -56,8 +56,8 @@ import com.fedeherrera.infra.service.auth.AuthService;
 import com.fedeherrera.infra.service.role.RoleService;
 import com.fedeherrera.infra.service.token.RefreshTokenService;
 import com.fedeherrera.infra.service.user.UserService;
-import com.fedeherrera.infra.service.verfication.VerificationService;
-import com.fedeherrera.testUtil.AuhtControllerTest;
+import com.fedeherrera.infra.service.verification.VerificationService;
+import com.fedeherrera.testUtil.AuthControllerTest;
 import com.fedeherrera.testUtil.TestUser;
 import com.fedeherrera.testUtil.TestVerificationToken;
 
@@ -69,8 +69,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
-@WebMvcTest(AuhtControllerTest.class) // Solo carga este controlador
-@ContextConfiguration(classes = { AuhtControllerTest.class, GlobalExceptionHandler.class })
+@WebMvcTest(AuthControllerTest.class) // Solo carga este controlador
+@ContextConfiguration(classes = { AuthControllerTest.class, GlobalExceptionHandler.class })
 @Import(TestSecurityConfig.class)
 class BaseControllerTest {
 
@@ -149,7 +149,7 @@ class BaseControllerTest {
                 doNothing().when(authService).registerPublic(any(PublicRegisterRequest.class));
 
                 // 2. WHEN (Acción)
-                mockMvc.perform(post("/register")
+                mockMvc.perform(post("/api/v1/auth/register")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
 
@@ -172,7 +172,7 @@ class BaseControllerTest {
                 request.setFirstName("Federico");
                 request.setLastName("Herrera");
 
-                mockMvc.perform(post("/register")
+                mockMvc.perform(post("/api/v1/auth/register")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andDo(print())
@@ -202,7 +202,7 @@ class BaseControllerTest {
                 doThrow(new RegistrationException("Username ya registrado."))
                                 .when(authService).registerPublic(any(PublicRegisterRequest.class));
 
-                mockMvc.perform(post("/register")
+                mockMvc.perform(post("/api/v1/auth/register")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andDo(print())
@@ -225,7 +225,7 @@ class BaseControllerTest {
                 doThrow(new RegistrationException("Email ya registrado."))
                                 .when(authService).registerPublic(any(PublicRegisterRequest.class));
 
-                mockMvc.perform(post("/register")
+                mockMvc.perform(post("/api/v1/auth/register")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andDo(print())
@@ -246,7 +246,7 @@ class BaseControllerTest {
                 when(authService.login(any(LoginRequest.class))).thenReturn(response);
 
                 // 3. Ejecutar y Verificar
-                mockMvc.perform(post("/login")
+                mockMvc.perform(post("/api/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andExpect(status().isOk())
@@ -260,7 +260,7 @@ class BaseControllerTest {
 
                 when(authService.login(any(LoginRequest.class))).thenThrow(new AuthException("Credenciales invalidas"));
                 // 3. Ejecutar y Verificar
-                mockMvc.perform(post("/login")
+                mockMvc.perform(post("/api/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andExpect(status().isBadRequest())
@@ -275,7 +275,7 @@ class BaseControllerTest {
                 when(authService.login(any(LoginRequest.class)))
                                 .thenThrow(new AuthException("Cuenta bloqueada por seguridad"));
                 // 3. Ejecutar y Verificar
-                mockMvc.perform(post("/login")
+                mockMvc.perform(post("/api/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andExpect(status().isBadRequest())
@@ -289,7 +289,7 @@ class BaseControllerTest {
 
                 when(authService.login(any(LoginRequest.class))).thenThrow(new AuthException("Usuario no verificado"));
                 // 3. Ejecutar y Verificar
-                mockMvc.perform(post("/login")
+                mockMvc.perform(post("/api/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andExpect(status().isBadRequest())
@@ -302,7 +302,7 @@ class BaseControllerTest {
 
                 when(verificationService.validateToken(any(String.class))).thenReturn(Optional.of(testUser));
 
-                mockMvc.perform(put("/verify")
+                mockMvc.perform(put("/api/v1/auth/verify")
                                 .param("token", "test"))
                                 .andExpect(status().isAccepted())
                                 .andExpect(jsonPath("$.message").value("Cuenta verificada correctamente"));
@@ -314,7 +314,7 @@ class BaseControllerTest {
                 when(verificationService.validateToken(any(String.class)))
                                 .thenThrow(new RegistrationException("Token invalido"));
 
-                mockMvc.perform(put("/verify")
+                mockMvc.perform(put("/api/v1/auth/verify")
                                 .param("token", "test"))
                                 .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.error").value("Business Logic Error"))
@@ -332,7 +332,7 @@ class BaseControllerTest {
                 doNothing().when(authService).resetPassword(testUser);
 
                 // 2. Ejecutar
-                mockMvc.perform(post("/forgot-password")
+                mockMvc.perform(post("/api/v1/auth/forgot-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andExpect(status().isOk())
@@ -352,7 +352,7 @@ class BaseControllerTest {
                 when(userService.findByEmail(any(String.class)))
                                 .thenThrow(new RegistrationException("Email no encontrado"));
 
-                mockMvc.perform(post("/forgot-password")
+                mockMvc.perform(post("/api/v1/auth/forgot-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andExpect(status().isBadRequest())
@@ -371,7 +371,7 @@ class BaseControllerTest {
 
                 doNothing().when(authService).resetPassword(testUser);
 
-                mockMvc.perform(post("/forgot-password")
+                mockMvc.perform(post("/api/v1/auth/forgot-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andExpect(status().isBadRequest())
@@ -389,7 +389,7 @@ class BaseControllerTest {
 
                 doNothing().when(authService).resetPassword(any());
 
-                mockMvc.perform(post("/reset-password")
+                mockMvc.perform(post("/api/v1/auth/reset-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andExpect(status().isOk())
@@ -405,7 +405,7 @@ class BaseControllerTest {
                 doThrow(new RegistrationException("Token invalido"))
                                 .when(userService).resetPassword(anyString(), anyString());
 
-                mockMvc.perform(post("/reset-password")
+                mockMvc.perform(post("/api/v1/auth/reset-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(request)))
                                 .andExpect(status().isBadRequest())
@@ -425,7 +425,7 @@ class BaseControllerTest {
 
                 when(authService.refreshToken(anyString(), anyString(), anyString())).thenReturn(loginResponse);
 
-                mockMvc.perform(post("/refresh")
+                mockMvc.perform(post("/api/v1/auth/refresh")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header("User-Agent", "test")
                                 .cookie(sessionCookie)
@@ -445,7 +445,7 @@ class BaseControllerTest {
 
                 when(authService.refreshToken(anyString(), anyString(), anyString())).thenReturn(loginResponse);
 
-                mockMvc.perform(post("/refresh")
+                mockMvc.perform(post("/api/v1/auth/refresh")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(new ObjectMapper().writeValueAsString(loginResponse)))
                                 .andExpect(status().isInternalServerError());

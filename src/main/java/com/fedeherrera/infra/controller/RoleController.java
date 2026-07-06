@@ -44,17 +44,9 @@ public class RoleController {
      * 
      * @return Lista de todos los roles
      */
-    @Operation(
-        summary = "Obtener todos los roles",
-        description = "Retorna una lista de todos los roles registrados en el sistema"
-    )
+    @Operation(summary = "Obtener todos los roles", description = "Retorna una lista de todos los roles registrados en el sistema")
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200", 
-            description = "Lista de roles obtenida exitosamente",
-            content = @Content(mediaType = "application/json", 
-                             schema = @Schema(implementation = Role.class))
-        )
+            @ApiResponse(responseCode = "200", description = "Lista de roles obtenida exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Role.class)))
     })
     @GetMapping
     public List<Role> getAllRoles() {
@@ -67,28 +59,14 @@ public class RoleController {
      * @param name Nombre del rol a buscar
      * @return El rol encontrado o null si no existe
      */
-    @Operation(
-        summary = "Buscar rol por nombre",
-        description = "Retorna un rol específico basado en su nombre"
-    )
+    @Operation(summary = "Buscar rol por nombre", description = "Retorna un rol específico basado en su nombre")
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200", 
-            description = "Rol encontrado exitosamente",
-            content = @Content(mediaType = "application/json", 
-                             schema = @Schema(implementation = Role.class))
-        ),
-        @ApiResponse(
-            responseCode = "404", 
-            description = "Rol no encontrado",
-            content = @Content
-        )
+            @ApiResponse(responseCode = "200", description = "Rol encontrado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Role.class))),
+            @ApiResponse(responseCode = "404", description = "Rol no encontrado", content = @Content)
     })
     @GetMapping("/{name}")
     public ResponseEntity<?> getRoleByName(
-        @Parameter(description = "Nombre del rol a buscar", required = true)
-        @PathVariable String name
-    ) {
+            @Parameter(description = "Nombre del rol a buscar", required = true) @PathVariable String name) {
         Optional<Role> role = roleService.findByName(name);
         if (role.isPresent()) {
             return ResponseEntity.ok(role.get());
@@ -102,70 +80,33 @@ public class RoleController {
      * @param role Objeto Role con los datos del nuevo rol
      * @return El rol creado
      */
-    @Operation(
-        summary = "Crear un nuevo rol",
-        description = "Crea un nuevo rol en el sistema"
-    )
+    @Operation(summary = "Crear un nuevo rol", description = "Crea un nuevo rol en el sistema")
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "201", 
-            description = "Rol creado exitosamente",
-            content = @Content(mediaType = "application/json", 
-                             schema = @Schema(implementation = Role.class))
-        ),
-        @ApiResponse(
-            responseCode = "400", 
-            description = "Datos del rol inválidos",
-            content = @Content
-        )
+            @ApiResponse(responseCode = "201", description = "Rol creado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Role.class))),
+            @ApiResponse(responseCode = "400", description = "Datos del rol inválidos", content = @Content)
     })
     @PostMapping
     public Role createRole(
-        @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "Objeto Role que será creado",
-            required = true,
-            content = @Content(schema = @Schema(implementation = Role.class))
-        )
-        @RequestBody Role role
-    ) {
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Objeto Role que será creado", required = true, content = @Content(schema = @Schema(implementation = Role.class))) @RequestBody Role role) {
         return roleService.save(role);
     }
 
     /**
      * Actualiza un rol existente.
      * 
-     * @param id Identificador del rol a actualizar
+     * @param id   Identificador del rol a actualizar
      * @param role Nuevos datos del rol
      * @return El rol actualizado
      */
-    @Operation(
-        summary = "Actualizar un rol existente",
-        description = "Actualiza los datos de un rol existente"
-    )
+    @Operation(summary = "Actualizar un rol existente", description = "Actualiza los datos de un rol existente")
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200", 
-            description = "Rol actualizado exitosamente",
-            content = @Content(mediaType = "application/json", 
-                             schema = @Schema(implementation = Role.class))
-        ),
-        @ApiResponse(
-            responseCode = "404", 
-            description = "Rol no encontrado",
-            content = @Content
-        )
+            @ApiResponse(responseCode = "200", description = "Rol actualizado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Role.class))),
+            @ApiResponse(responseCode = "404", description = "Rol no encontrado", content = @Content)
     })
     @PutMapping("/{id}")
     public Role updateRole(
-        @Parameter(description = "ID del rol a actualizar", required = true)
-        @PathVariable Long id,
-        @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "Objeto Role con los datos actualizados",
-            required = true,
-            content = @Content(schema = @Schema(implementation = Role.class))
-        )
-        @RequestBody Role role
-    ) {
+            @Parameter(description = "ID del rol a actualizar", required = true) @PathVariable Long id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Objeto Role con los datos actualizados", required = true, content = @Content(schema = @Schema(implementation = Role.class))) @RequestBody Role role) {
         role.setId(id);
         return roleService.save(role);
     }
@@ -176,32 +117,15 @@ public class RoleController {
      * @param id Identificador del rol a eliminar
      * @return Respuesta sin contenido
      */
-    @Operation(
-        summary = "Eliminar un rol",
-        description = "Elimina un rol del sistema. No se puede eliminar un rol que esté asignado a usuarios."
-    )
+    @Operation(summary = "Eliminar un rol", description = "Elimina un rol del sistema. No se puede eliminar un rol que esté asignado a usuarios.")
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "204", 
-            description = "Rol eliminado exitosamente",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "404", 
-            description = "Rol no encontrado",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "409", 
-            description = "No se puede eliminar el rol porque está asignado a usuarios",
-            content = @Content
-        )
+            @ApiResponse(responseCode = "204", description = "Rol eliminado exitosamente", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Rol no encontrado", content = @Content),
+            @ApiResponse(responseCode = "409", description = "No se puede eliminar el rol porque está asignado a usuarios", content = @Content)
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteRole(
-        @Parameter(description = "ID del rol a eliminar", required = true)
-        @PathVariable Long id
-    ) {
+            @Parameter(description = "ID del rol a eliminar", required = true) @PathVariable Long id) {
         roleService.deleteById(id);
         return ResponseEntity.noContent().build();
     }

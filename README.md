@@ -60,6 +60,7 @@ Boilerplate escalable diseñado para acelerar el ciclo de desarrollo (Time-to-Ma
 ## 📦 Instalación
 
 1. **Clonar el repositorio**
+
    ```bash
    git clone [https://github.com/tu-usuario/api-infra-starter.git](https://github.com/tu-usuario/api-infra-starter.git)
    cd api-infra-starter
@@ -67,20 +68,19 @@ Boilerplate escalable diseñado para acelerar el ciclo de desarrollo (Time-to-Ma
 
    **Compilar el Starter localmente:** En la raíz del proyecto starter, ejecuta:
 
-    ```bash
-        mvn clean install
-    ```
+   ```bash
+       mvn clean install
+   ```
 
-2.  **Agregar la dependencia en tu nuevo proyecto (`pom.xml`):**
+2. **Agregar la dependencia en tu nuevo proyecto (`pom.xml`):**
 
-    ```xml
-    <dependency>
-        <groupId>com.fedeherrera</groupId>
-        <artifactId>infra-starter</artifactId>
-        <version>1.0.0</version>
-    </dependency>
-
-    ```
+   ```xml
+   <dependency>
+       <groupId>com.fedeherrera.infra</groupId>
+       <artifactId>api-infra-starter</artifactId>
+       <version>1.0.0</version>
+   </dependency>
+   ```
 
 ---
 
@@ -122,8 +122,6 @@ public interface TokenRepository extends BaseVerificationTokenRepository<Verific
 
 Debes extender las implementaciones abstractas para decirle a Spring qué entidades usar:
 
-
-
 ```java
 @Service
 public class AppUserService extends UserServiceImpl<User, VerificationToken> {
@@ -155,13 +153,13 @@ public class AppVerificationService extends VerificationServiceImpl<User, Verifi
                 .user(user)
                 .token(token)
                 .expiresAt(expiresAt)
-                .type(BaseVerificationToken.TokenType.valueOf(type)) 
+                .type(BaseVerificationToken.TokenType.valueOf(type))
                 .build();
     }
 
     @Override
     protected User getUserFromToken(VerificationToken token) {
-        
+
         return token.getUser();
     }
 }
@@ -171,8 +169,6 @@ public class AppVerificationService extends VerificationServiceImpl<User, Verifi
 ### 4. Configurar el Controlador
 
 Expón los endpoints de autenticación extendiendo el controlador base:
-
-
 
 ```java
 @RestController
@@ -204,7 +200,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect 
+    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: validate
     show-sql: true
@@ -342,63 +338,72 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 ```
 
 ```java
-package  com.example.prueba.demo;
 
+@SpringBootApplication(scanBasePackages = {
 
+		"com.demo.app", // Tu paquete actual
 
-import  org.springframework.boot.SpringApplication;
-
-import  org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import  org.springframework.boot.autoconfigure.domain.EntityScan;
-
-import  org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-
-import  org.springframework.scheduling.annotation.EnableAsync;
-
-
-
-
-@SpringBootApplication(scanBasePackages  = {
-
-"com.example.prueba.demo", // Tu paquete actual
-
-"com.fedeherrera.infra"  // El paquete del Starter
+		"com.fedeherrera.infra" // El paquete del Starter
 
 })
 
 // IMPORTANTE: También debes habilitar los repositorios del Starter
 
-@EnableJpaRepositories(basePackages  = {
+@EnableJpaRepositories(basePackages = {
 
-"com.example.prueba.demo.repository",
+		"com.demo.app.repository",
 
-"com.fedeherrera.infra.repository"
-
-})
-
-
-
-@EntityScan(basePackages  = {
-
-"com.example.prueba.demo.Entity",
-
-"com.fedeherrera.infra.entity"
+		"com.fedeherrera.infra.repository"
 
 })
 
-@EnableAsync
+@EntityScan(basePackages = {
 
-public  class  DemoApplication {
+		"com.demo.app.entity",
 
+		"com.fedeherrera.infra.entity"
 
+})
+public class DemoApplication {
 
-public  static  void  main(String[] args) {
-
-SpringApplication.run(DemoApplication.class, args);
+	public static void main(String[] args) {
+		SpringApplication.run(DemoApplication.class, args);
+	}
 
 }
 
-}``
-
 ```
+
+---
+
+## 🔒 Personalización de Seguridad
+
+El starter incluye una configuración de seguridad **default** que:
+
+- Deshabilita CSRF
+- Configura CORS desde `app.cors.allowed-origins`
+- Establece sesiones **stateless** (JWT)
+- Expone como públicos: `/api/v1/auth/**`, `/actuator/health`, `/actuator/info`, `/swagger-ui/**`, `/v3/api-docs/**`
+- Conecta `JwtAuthFilter`, `RateLimitFilter`, `JwtAuthenticationEntryPoint` y `CustomAccessDeniedHandler`
+- Provee beans de `PasswordEncoder` (BCrypt) y `AuthenticationManager`
+
+### Cómo sobrescribir la seguridad
+
+Si necesitas personalizar la configuración de seguridad, simplemente define un bean `SecurityFilterChain` en tu aplicación. El starter automáticamente usará tu bean en lugar del default:
+
+```java
+@Configuration
+public class MySecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .cors(cors -> { /* tu config */ })
+            .csrf(csrf -> csrf.disable())
+            // ... tu configuración personalizada
+            .build();
+    }
+}
+```
+
+Del mismo modo puedes sobrescribir `PasswordEncoder` o `AuthenticationManager` definiendo tus propios beans.

@@ -6,8 +6,9 @@ import com.fedeherrera.infra.entity.BaseVerificationToken;
 import com.fedeherrera.infra.exception.RegistrationException;
 import com.fedeherrera.infra.service.auth.AuthService;
 import com.fedeherrera.infra.service.user.UserService;
-import com.fedeherrera.infra.service.verfication.VerificationService;
+import com.fedeherrera.infra.service.verification.VerificationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RequiredArgsConstructor
+@Tag(name = "Auth", description = "Endpoints de autenticación")
+@RequestMapping("/api/v1/auth")
 public abstract class BaseAuthController<T extends BaseUser, V extends BaseVerificationToken> {
 
     protected final AuthService<T, V> authService;

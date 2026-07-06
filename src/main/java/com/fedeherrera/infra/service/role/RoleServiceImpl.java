@@ -35,7 +35,7 @@ public class RoleServiceImpl implements RoleService {
         }
 
         Optional<Role> existingRole = roleRepository.findByName(role.getName());
-        if (!existingRole.isPresent()) {
+        if (existingRole.isPresent()) {
             throw new IllegalArgumentException("Role with name " + role.getName() + " already exists");
         }
         

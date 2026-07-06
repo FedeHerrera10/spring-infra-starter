@@ -20,7 +20,7 @@ public class DefaultEmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
 
     @Override
-    // Nota: El @Async se mueve al Listener para mayor control, 
+    // Nota: El @Async se mueve al Listener para mayor control,
     // pero puedes dejarlo aquí si prefieres.
     public void sendEmail(EmailEvent event) {
         try {
@@ -28,11 +28,11 @@ public class DefaultEmailServiceImpl implements EmailService {
             message.setFrom(fromEmail);
             message.setTo(event.recipient());
             message.setSubject(event.template().getSubject());
-            
+
             // Aquí podrías usar Thymeleaf, por ahora usamos un generador de texto simple
-            String content = buildContent(event); 
+            String content = buildContent(event);
             message.setText(content);
-            
+
             mailSender.send(message);
             log.info("📧 Correo [{}] enviado a: {}", event.template(), event.recipient());
         } catch (Exception e) {

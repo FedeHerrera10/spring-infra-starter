@@ -14,6 +14,7 @@ public class EmailAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(EmailService.class)
     public EmailService emailService(JavaMailSender mailSender) {
+
         return new DefaultEmailServiceImpl(mailSender);
     }
 

@@ -4,7 +4,7 @@ import com.fedeherrera.infra.entity.BaseUser;
 import com.fedeherrera.infra.entity.BaseVerificationToken;
 import com.fedeherrera.infra.exception.RegistrationException;
 import com.fedeherrera.infra.repository.BaseUserRepository;
-import com.fedeherrera.infra.service.verfication.VerificationService;
+import com.fedeherrera.infra.service.verification.VerificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

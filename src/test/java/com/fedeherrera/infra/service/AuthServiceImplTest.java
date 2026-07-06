@@ -8,7 +8,7 @@ import com.fedeherrera.infra.service.auth.AuthService;
 import com.fedeherrera.infra.service.role.RoleService;
 import com.fedeherrera.infra.service.token.RefreshTokenService;
 import com.fedeherrera.infra.service.user.UserService;
-import com.fedeherrera.infra.service.verfication.VerificationService;
+import com.fedeherrera.infra.service.verification.VerificationService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -380,9 +380,10 @@ class AuthServiceImplTest {
                 AuthException.class,
                 () -> authService.loginWithGoogle(googleToken));
 
-        assertEquals("Error durante la autenticación con Google", exception.getMessage());
+        assertEquals("Token de Google inválido", exception.getMessage());
     }
 
+    @Test
     @DisplayName("Should throw exception when Google user is disabled")
     void testLoginWithGoogle_DisabledUser() throws Exception {
         // Given
@@ -424,6 +425,7 @@ class AuthServiceImplTest {
 
     // ==================== TESTS DE REFRESH TOKEN ====================
 
+    @Test
     @DisplayName("Should refresh token successfully")
     void testRefreshToken_Success() {
         // Given

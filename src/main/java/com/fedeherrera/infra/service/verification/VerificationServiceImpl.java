@@ -1,4 +1,4 @@
-package com.fedeherrera.infra.service.verfication;
+package com.fedeherrera.infra.service.verification;
 
 import com.fedeherrera.infra.entity.BaseUser;
 import com.fedeherrera.infra.entity.BaseVerificationToken;

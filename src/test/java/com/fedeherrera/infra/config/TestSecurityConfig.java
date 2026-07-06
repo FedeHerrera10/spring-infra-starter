@@ -11,14 +11,9 @@ public class TestSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Deshabilitas CSRF para facilitar el test
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/verify").permitAll() // Simulas que es público
-                        .requestMatchers("/login").permitAll() // Simulas que es público
-                        .requestMatchers("/register").permitAll() // Simulas que es público
-                        .requestMatchers("/forgot-password").permitAll() // Simulas que es público
-                        .requestMatchers("/reset-password").permitAll() // Simulas que es público
-                        .requestMatchers("/refresh").permitAll() // Simulas que es público
+                        .requestMatchers("/api/v1/auth/**").permitAll()
                         .anyRequest().authenticated());
         return http.build();
     }
