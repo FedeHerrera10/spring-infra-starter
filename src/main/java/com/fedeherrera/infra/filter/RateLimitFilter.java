@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fedeherrera.infra.dto.ErrorResponse;
+import com.fedeherrera.infra.config.RateLimitProperties;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -36,8 +37,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
+    private final RateLimitProperties rateLimitProperties;
 
-    public RateLimitFilter(@Autowired(required = false) ObjectMapper objectMapper) {
+    public RateLimitFilter(@Autowired(required = false) ObjectMapper objectMapper,
+                           @Autowired RateLimitProperties rateLimitProperties) {
+        this.rateLimitProperties = rateLimitProperties;
         if (objectMapper != null) {
             this.objectMapper = objectMapper;
             log.info("RateLimitFilter: Usando ObjectMapper inyectado.");
@@ -72,15 +76,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private Bucket createNewBucket(String path) {
         Bandwidth limit;
 
-        if (path.startsWith("/auth/login") || path.startsWith("/auth/register")) {
-            // 5 tokens cada 1 minuto
-            limit = Bandwidth.classic(5, Refill.greedy(5, Duration.ofMinutes(1)));
-        } else if (path.startsWith("/auth/refresh-token")) {
-            // 20 tokens cada 1 minuto
-            limit = Bandwidth.classic(20, Refill.greedy(20, Duration.ofMinutes(1)));
+        if (path.startsWith("/api/v1/auth/login") || path.startsWith("/api/v1/auth/register")) {
+            // tokens per minute for auth endpoints
+            limit = Bandwidth.classic(rateLimitProperties.getAuth(), Refill.greedy(rateLimitProperties.getAuth(), Duration.ofMinutes(1)));
+        } else if (path.startsWith("/api/v1/auth/refresh")) {
+            // tokens per minute for refresh endpoint
+            limit = Bandwidth.classic(rateLimitProperties.getRefresh(), Refill.greedy(rateLimitProperties.getRefresh(), Duration.ofMinutes(1)));
         } else {
-            // 100 tokens cada 1 minuto
-            limit = Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1)));
+            // fallback tokens per minute for other endpoints
+            limit = Bandwidth.classic(rateLimitProperties.getDefaultLimit(), Refill.greedy(rateLimitProperties.getDefaultLimit(), Duration.ofMinutes(1)));
         }
 
         return Bucket.builder()

@@ -8,7 +8,7 @@ import com.fedeherrera.infra.service.GoogleTokenVerifierService;
 import com.fedeherrera.infra.service.JwtService;
 import com.fedeherrera.infra.service.role.RoleService;
 import com.fedeherrera.infra.service.user.UserService;
-import com.fedeherrera.infra.service.verfication.VerificationService;
+import com.fedeherrera.infra.service.verification.VerificationService;
 import com.fedeherrera.infra.service.token.RefreshTokenService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import lombok.RequiredArgsConstructor;
@@ -172,6 +172,9 @@ public class AuthService<T extends BaseUser, V extends BaseVerificationToken> { 
             return new LoginResponse(user.getUsername(), accessToken, refreshToken,
                     user.getRoles().stream().findFirst().map(Role::getName).orElse("ROLE_USER"));
 
+        } catch (AuthException e) {
+            // Propagate business‑logic errors unchanged
+            throw e;
         } catch (Exception e) {
             log.error("Error en Google Auth: ", e);
             throw new AuthException("Error durante la autenticación con Google");

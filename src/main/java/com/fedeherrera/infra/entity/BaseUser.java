@@ -12,7 +12,7 @@ import com.fedeherrera.infra.dto.AuthProviderEnum;
 @MappedSuperclass
 @Getter
 @Setter
-public abstract class BaseUser extends AuditableEntity {
+public abstract class BaseUser extends AuditableEntity implements AuthUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
