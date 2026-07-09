@@ -1,5 +1,5 @@
 #!/bin/sh
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,109 +16,134 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# Maven Start Up Batch script
+# ----------------------------------------------------------------------------
+# Apache Maven Wrapper startup batch script, version 3.2.0
 #
-# Required ENV vars:
-# ------------------
-#   JAVA_HOME - location of a JDK home dir
-#
-# Optional ENV vars
-# -----------------
-#   M2_HOME - location of maven2's installed home dir
-#   MAVEN_OPTS - parameters passed to the Java VM when running Maven
-#     e.g. to debug Maven itself, use
-#       set MAVEN_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000
-#   MAVEN_SKIP_RC - flag to disable loading of mavenrc files
-# ---------------------------------------------------------------------------
+# Optional ENV vars:
+#   MVNW_REPOURL - repo url base for downloading maven distribution
+#   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
+#   MVNW_VERBOSE - true: enable verbose log; others: silence the output
+# ----------------------------------------------------------------------------
 
-if [ -z "$MAVEN_SKIP_RC" ] ; then
-
-  if [ -f /usr/local/etc/mavenrc ] ; then
-    . /usr/local/etc/mavenrc
-  fi
-
-  if [ -f /etc/mavenrc ] ; then
-    . /etc/mavenrc
-  fi
-
-  if [ -f "$HOME/.mavenrc" ] ; then
-    . "$HOME/.mavenrc"
-  fi
-
+if [ "${MVNW_VERBOSE}" = true ] || [ "${MVNW_VERBOSE}" = debug ]; then
+  set -x
 fi
 
-# OS specific support: $must_be _match_.
-cygwin=false;
-darwin=false;
-nonstop=false
-case "`uname`" in
-  CYGWIN* ) cygwin=true ;;
-  Darwin* ) darwin=true ;;
-  MINGW* ) msys=true ;;
-  NONSTOP* ) nonstop=true ;;
-esac
+# set _MVNW_CMD, _MVNW_PROJECTBASEDIR and _MVNW_REPOURL
+_MVNW_PROJECTBASEDIR="${MAVEN_BASEDIR:-$(cd "$(dirname "$0")" && pwd)}"
+export _MVNW_PROJECTBASEDIR
 
-CLASSPATH=$CLASSWORLDS_CLASSPATH
+if [ -z "${MVNW_REPOURL}" ]; then
+  _MVNW_REPOURL="https://repo.maven.apache.org/maven2"
+else
+  _MVNW_REPOURL="${MVNW_REPOURL}"
+fi
 
 # Determine the Java command to use to start the JVM.
-if [ -n "$JAVA_HOME" ] ; then
-  if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
-    JAVACMD="$JAVA_HOME/jre/sh/java"
+if [ -n "${JAVA_HOME}" ] ; then
+  if [ -x "${JAVA_HOME}/jre/sh/java" ] ; then
+    JAVACMD="${JAVA_HOME}/jre/sh/java"
   else
-    JAVACMD="$JAVA_HOME/bin/java"
+    JAVACMD="${JAVA_HOME}/bin/java"
   fi
-  if [ ! -x "$JAVACMD" ] ; then
-    die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME
-
-Please set the JAVA_HOME variable in your environment to match the
-location of your Java installation."
+  if [ ! -x "${JAVACMD}" ] ; then
+    die "ERROR: JAVA_HOME is set to an invalid directory: ${JAVA_HOME}"
   fi
 else
   JAVACMD="java"
-  which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
-
-Please set the JAVA_HOME variable in your environment to match the
-location of your Java installation."
-fi
-
-# Increase the maximum file descriptors if we can.
-if [ "$cygwin" = "false" -a "$darwin" = "false" -a "$nonstop" = "false" ] ; then
-  MAX_FD_LIMIT=`ulimit -H -n`
-  if [ $? -eq 0 ] ; then
-    if [ "$MAX_FD_LIMIT" = "unlimited" -o "$MAX_FD_LIMIT" = "infinity" ] ; then
-      MAX_FD_LIMIT=""
-    fi
-    ulimit -n 65536
+  if ! command -v java >/dev/null 2>&1 ; then
+    die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH."
   fi
 fi
 
-# For Cygwin, switch paths to Windows format before running java
-if $cygwin ; then
-  [ -n "$M2_HOME" ] && M2_HOME=`cygpath --path --windows "$M2_HOME"`
-  [ -n "$JAVA_HOME" ] && JAVA_HOME=`cygpath --path --windows "$JAVA_HOME"`
-  [ -n "$CLASSPATH" ] && CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
+die() {
+  echo "$@" 1>&2
+  exit 1
+}
+
+verbose() {
+  if [ "${MVNW_VERBOSE}" = true ] || [ "${MVNW_VERBOSE}" = debug ]; then
+    echo "$@"
+  fi
+}
+
+# Parse distributionUrl and optional distributionSha256Sum, requires .teledata/teledata
+distributionUrl() {
+  local _distributionUrl
+  _distributionUrl=$(command sed -n 's/[!#]*/distributionUrl=\([^#]*\).*/\1/p' "${_MVNW_PROJECTBASEDIR}/.mvn/wrapper/maven-wrapper.properties")
+  echo "${_distributionUrl}"
+}
+
+distributionSha256Sum() {
+  local _distributionSha256Sum
+  _distributionSha256Sum=$(command sed -n 's/[!#]*/distributionSha256Sum=\([^#]*\).*/\1/p' "${_MVNW_PROJECTBASEDIR}/.mvn/wrapper/maven-wrapper.properties")
+  echo "${_distributionSha256Sum}"
+}
+
+wrapperUrl() {
+  local _wrapperUrl
+  _wrapperUrl=$(command sed -n 's/[!#]*/wrapperUrl=\([^#]*\).*/\1/p' "${_MVNW_PROJECTBASEDIR}/.mvn/wrapper/maven-wrapper.properties")
+  echo "${_wrapperUrl}"
+}
+
+# apply MVNW_USERNAME and MVNW_PASSWORD if present
+case "${MVNW_USERNAME}${MVNW_PASSWORD}" in
+  '') ;;
+  *)
+    if [ "${MVNW_VERBOSE}" = true ]; then
+      echo "Using credentials from MVNW_USERNAME/MVNW_PASSWORD"
+    fi
+    _curl_options="-u ${MVNW_USERNAME}:${MVNW_PASSWORD} --silent --show-error --fail"
+    _wget_options="--auth-no-challenge --quiet --user=${MVNW_USERNAME} --password=${MVNW_PASSWORD}"
+    ;;
+esac
+
+# Prepare distribution download
+_distributionUrl=$(distributionUrl)
+_distributionSha256Sum=$(distributionSha256Sum)
+
+# Determine the Maven Wrapper JAR and distribution
+_wrapperJarPath="${_MVNW_PROJECTBASEDIR}/.mvn/wrapper/maven-wrapper.jar"
+
+if [ -r "${_wrapperJarPath}" ]; then
+  verbose "Found existing .mvn/wrapper/maven-wrapper.jar"
+else
+  verbose "Could not find .mvn/wrapper/maven-wrapper.jar, downloading from $(wrapperUrl)"
+  _wrapperUrl=$(wrapperUrl)
+  if [ -n "${_wrapperUrl}" ]; then
+    if command -v curl >/dev/null 2>&1; then
+      verbose "Downloading with curl"
+      eval "curl \${_curl_options} -o \"${_wrapperJarPath}\" \"${_wrapperUrl}\""
+    elif command -v wget >/dev/null 2>&1; then
+      verbose "Downloading with wget"
+      eval "wget \${_wget_options} -O \"${_wrapperJarPath}\" \"${_wrapperUrl}\""
+    else
+      die "ERROR: No download tool found (curl or wget required)"
+    fi
+  fi
+
+  # If jar download failed, try compiling MavenWrapperDownloader.java
+  if [ ! -r "${_wrapperJarPath}" ] && [ -r "${_MVNW_PROJECTBASEDIR}/.mvn/wrapper/MavenWrapperDownloader.java" ]; then
+    verbose "Compiling MavenWrapperDownloader.java"
+    _tmpdir=$(mktemp -d)
+    if command -v javac >/dev/null 2>&1; then
+      javac -d "${_tmpdir}" "${_MVNW_PROJECTBASEDIR}/.mvn/wrapper/MavenWrapperDownloader.java" && \
+        (cd "${_tmpdir}" && java MavenWrapperDownloader) && \
+        mv "${_tmpdir}/maven-wrapper.jar" "${_wrapperJarPath}"
+      rm -rf "${_tmpdir}"
+    fi
+  fi
 fi
 
-# Collect all arguments for the java command
-MAVEN_PROJECTBASEDIR=${MAVEN_BASEDIR:-"$(pwd)"}
-MAVEN_OPTS="$MAVEN_OPTS -Dmaven.multiModuleProjectDirectory=$MAVEN_PROJECTBASEDIR"
-
-# For Cygwin or MSYS, switch paths to Windows format before running java
-if [ "$cygwin" = "true" -o "$msys" = "true" ] ; then
-  [ -n "$M2_HOME" ] && M2_HOME=`cygpath --path --windows "$M2_HOME"`
-  [ -n "$JAVA_HOME" ] && JAVA_HOME=`cygpath --path --windows "$JAVA_HOME"`
-  [ -n "$HOME" ] && HOME=`cygpath --path --windows "$HOME"`
-  [ -n "$CLASSPATH" ] && CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
+if [ -r "${_wrapperJarPath}" ]; then
+  exec "${JAVACMD}" \
+    ${MAVEN_OPTS} \
+    ${MAVEN_DEBUG_OPTS} \
+    -classpath "${_wrapperJarPath}" \
+    "-Dmaven.multiModuleProjectDirectory=${_MVNW_PROJECTBASEDIR}" \
+    org.apache.maven.wrapper.MavenWrapperMain "$@"
+else
+  die "ERROR: Failed to download maven-wrapper.jar. Check your internet connection or the wrapperUrl in .mvn/wrapper/maven-wrapper.properties"
 fi
-
-# Concatenate all arguments
-MAVEN_CMD_LINE_ARGS="$@"
-
-exec "$JAVACMD" \
-  $MAVEN_OPTS \
-  -classpath "$CLASSPATH" \
-  -Dmaven.multiModuleProjectDirectory="$MAVEN_PROJECTBASEDIR" \
-  org.apache.maven.wrapper.MavenWrapperMain "$MAVEN_CMD_LINE_ARGS"
